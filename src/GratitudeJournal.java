@@ -1,49 +1,63 @@
+import java.io.*;
 import java.util.ArrayList;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 
 /**
- * Stores and manages journal entries.
+ * Manages a collection of journal entries and file storage.
  */
 public class GratitudeJournal {
     private ArrayList<JournalEntry> entries;
+    private int[][] moodFrequencies; // [mood level][count]
 
     public GratitudeJournal() {
         entries = new ArrayList<>();
+        moodFrequencies = new int[11][1]; // mood 1-10 (index 0 unused)
     }
 
+    /**
+     * Adds a journal entry and updates frequency tracker.
+     * @param entry the JournalEntry to add
+     */
     public void addEntry(JournalEntry entry) {
         entries.add(entry);
-        try {
-            saveEntryToFile(entry); // Automatically save each new entry
+        if (entry.getMood() >= 1 && entry.getMood() <= 10) {
+            moodFrequencies[entry.getMood()][0]++;
+        }
+        saveEntryToFile(entry);
+    }
+
+    /**
+     * Saves a single entry to the file.
+     * @param entry the entry to write
+     */
+    public void saveEntryToFile(JournalEntry entry) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("gratitude_journal.txt", true))) {
+            writer.write(entry.toString());
+            writer.newLine();
         } catch (IOException e) {
-            System.out.println("Failed to save entry to file.");
+            System.out.println("Failed to write to file.");
         }
     }
 
-    public void saveEntryToFile(JournalEntry entry) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter("gratitude_journal.txt", true));
-        writer.write("Date: " + java.time.LocalDate.now() + "\n");
-        writer.write("Mood: " + entry.getMood() + "\n");
-        writer.write("Gratitude: " + entry.getNote() + "\n");
-        writer.write("------\n");
-        writer.close();
-    }
-
-    public void saveAllToFile() throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter("gratitude_journal.txt"));
-        for (JournalEntry entry : entries) {
-            writer.write("Date: " + java.time.LocalDate.now() + "\n");
-            writer.write("Mood: " + entry.getMood() + "\n");
-            writer.write("Gratitude: " + entry.getNote() + "\n");
-            writer.write("------\n");
+    /**
+     * Saves all entries and average mood to the file.
+     */
+    public void saveAllToFile() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("gratitude_journal.txt"))) {
+            for (JournalEntry e : entries) {
+                writer.write(e.toString());
+                writer.newLine();
+            }
+            writer.write("Average Mood: " + calculateAverageMood());
+            writer.newLine();
+        } catch (IOException e) {
+            System.out.println("Failed to write all entries.");
         }
-        double average = calculateAverageMood();
-        writer.write("\nAverage Mood: " + String.format("%.2f", average) + "\n");
-        writer.close();
     }
 
+    /**
+     * Calculates and returns the average mood.
+     * @return average mood as double
+     */
     public double calculateAverageMood() {
         if (entries.isEmpty()) return 0;
         int sum = 0;
@@ -53,14 +67,26 @@ public class GratitudeJournal {
         return (double) sum / entries.size();
     }
 
-    public ArrayList<JournalEntry> getEntries() {
-        return entries;
-    }
-
+    /**
+     * Prints all journal entries.
+     */
     public void displayEntries() {
         for (JournalEntry e : entries) {
             System.out.println(e);
-            System.out.println("------");
         }
+    }
+
+    /**
+     * Displays mood frequency analysis.
+     */
+    public void printMoodFrequency() {
+        System.out.println("Mood Frequency:");
+        for (int i = 1; i <= 10; i++) {
+            System.out.println("Mood " + i + ": " + moodFrequencies[i][0]);
+        }
+    }
+
+    public ArrayList<JournalEntry> getEntries() {
+        return entries;
     }
 }
