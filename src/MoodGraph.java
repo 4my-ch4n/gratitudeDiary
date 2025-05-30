@@ -25,7 +25,7 @@ public class MoodGraph extends JPanel implements Displayable {
         super.paintComponent(g);
         int x = 10;
         for (JournalEntry e : entries) {
-            g.setColor(Color.BLUE);
+            g.setColor(Color.PINK);
             g.fillRect(x, 250 - e.getMood() * 20, 20, e.getMood() * 20);
             x += 30;
         }
